@@ -137,6 +137,7 @@ public class ManagedDeliveryScmService {
     String manifestContents =
         getScmMaster(scmType).getTextFileContents(project, repository, path, ref);
 
+    log.info(">> manifestContents: ", manifestContents);
     try {
       if (manifest.endsWith(".json")) {
         return (Map<String, Object>) jsonMapper.readValue(manifestContents, Map.class);

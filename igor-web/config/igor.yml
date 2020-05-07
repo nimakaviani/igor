@@ -18,6 +18,14 @@ spring.jackson.serialization.write_dates_as_timestamps: false
 
 server.port: 8088
 
+redis:
+  connection: redis://localhost:6379 #redis://spin-redis.spinnaker:6379
+
+github:
+  baseUrl: "https://api.github.com"
+  accessToken:
+  commitDisplayLength: 8
+
 #artifact:
 #  This is a feature toggle for decoration of artifacts.
 #  decorator:

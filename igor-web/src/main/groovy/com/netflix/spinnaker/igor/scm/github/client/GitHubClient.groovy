@@ -17,8 +17,12 @@
 package com.netflix.spinnaker.igor.scm.github.client
 
 import com.netflix.spinnaker.igor.scm.github.client.model.CompareCommitsResponse
+import com.netflix.spinnaker.igor.scm.github.client.model.FileContent
+import com.netflix.spinnaker.igor.scm.stash.client.model.TextLinesResponse
 import retrofit.http.GET
 import retrofit.http.Path
+import retrofit.http.Query
+import retrofit.http.Headers
 
 /**
  * Interface for interacting with a GitHub REST API
@@ -31,5 +35,13 @@ interface GitHubClient {
         @Path('repositorySlug') String repositorySlug,
         @Path('fromCommit') String fromCommit,
         @Path('toCommit') String toCommit)
+
+    @GET('/repos/{projectKey}/{repositorySlug}/contents/{path}')
+    FileContent getFile(
+      @Path('projectKey') String projectKey,
+      @Path('repositorySlug') String repositorySlug,
+      @Path(value = 'path', encode = false) String filePath,
+      @Query('at') String at
+    )
 }
 

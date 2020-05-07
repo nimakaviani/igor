@@ -18,6 +18,7 @@ package com.netflix.spinnaker.igor.scm.github.client
 
 import com.netflix.spinnaker.igor.config.GitHubProperties
 import com.netflix.spinnaker.igor.scm.AbstractScmMaster
+import groovy.util.logging.Slf4j
 import org.springframework.context.annotation.Bean
 import retrofit.Endpoints
 import retrofit.RequestInterceptor
@@ -30,6 +31,7 @@ import javax.validation.Valid
 /**
  * Wrapper class for a collection of GitHub clients
  */
+@Slf4j
 class GitHubMaster  extends AbstractScmMaster {
     GitHubClient gitHubClient
     String baseUrl
@@ -48,6 +50,18 @@ class GitHubMaster  extends AbstractScmMaster {
             .setConverter(new JacksonConverter())
             .build()
             .create(GitHubClient)
+    }
+
+    @Override
+    public String getTextFileContents(
+      String projectKey, String repositorySlug, String path, String at) {
+      log.info(">> Getting text file for ${projectKey}/${repositorySlug}/${path}");
+      try {
+        return gitHubClient.getFile(projectKey, repositorySlug, path, at).decode()
+      }catch(Exception e){
+        log.info(e.getMessage(), e)
+        throw e;
+      }
     }
 
     static class BasicAuthRequestInterceptor implements RequestInterceptor {
