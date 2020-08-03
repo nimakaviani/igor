@@ -1,7 +1,7 @@
 /*
- * Copyright 2020 Amazon.com, Inc.
+ * Copyright 2020 Armory
  *
- * Licensed under the Apache License, Version 2.0 (the "License")
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.igor.config;
+package com.netflix.spinnaker.igor.accounts.external;
 
-import java.util.List;
-
-import com.netflix.spinnaker.igor.accounts.Account;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Data
-@ConfigurationProperties(prefix = "codebuild")
-public class AwsCodeBuildProperties {
-  private List<AwsCodeBuildAccount> accounts;
-  private String accessKeyId;
-  private String secretAccessKey;
+@ConfigurationProperties("account.external-source")
+public class ExternalSourceAccountRepositoryConfig {
+  @Getter private Map<String, AccountRepository> repositories = new HashMap<>();
 
   @Data
-  public static class AwsCodeBuildAccount implements Account {
-    private String name;
-    private String region;
-    private String accountId;
-    private String assumeRole;
+  public static class AccountRepository {
+    private String endpoint;
+    private String parserClass;
   }
 }

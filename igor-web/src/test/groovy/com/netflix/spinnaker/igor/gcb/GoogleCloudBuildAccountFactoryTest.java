@@ -46,8 +46,8 @@ public class GoogleCloudBuildAccountFactoryTest {
 
   @Test
   public void applicationDefaultCredentials() {
-    GoogleCloudBuildProperties.Account accountConfig =
-        GoogleCloudBuildProperties.Account.builder()
+    GoogleCloudBuildProperties.GoogleCloudBuildAccount accountConfig =
+        GoogleCloudBuildProperties.GoogleCloudBuildAccount.builder()
             .name("test-account")
             .project("test-project")
             .jsonKey("")
@@ -57,7 +57,7 @@ public class GoogleCloudBuildAccountFactoryTest {
     when(googleCloudBuildClientFactory.create(eq(googleCredentials), any(String.class)))
         .thenReturn(googleCloudBuildClient);
 
-    GoogleCloudBuildAccount account = googleCloudBuildAccountFactory.build(accountConfig);
+    GoogleCloudBuildCredentials account = googleCloudBuildAccountFactory.build(accountConfig);
 
     verify(googleCredentialsService).getApplicationDefault();
     verify(googleCredentialsService, never()).getFromKey(any());
@@ -66,8 +66,8 @@ public class GoogleCloudBuildAccountFactoryTest {
 
   @Test
   public void jsonCredentials() {
-    GoogleCloudBuildProperties.Account accountConfig =
-        GoogleCloudBuildProperties.Account.builder()
+    GoogleCloudBuildProperties.GoogleCloudBuildAccount accountConfig =
+        GoogleCloudBuildProperties.GoogleCloudBuildAccount.builder()
             .name("test-account")
             .project("test-project")
             .jsonKey("/path/to/file")
@@ -77,7 +77,7 @@ public class GoogleCloudBuildAccountFactoryTest {
     when(googleCloudBuildClientFactory.create(eq(googleCredentials), any(String.class)))
         .thenReturn(googleCloudBuildClient);
 
-    GoogleCloudBuildAccount account = googleCloudBuildAccountFactory.build(accountConfig);
+    GoogleCloudBuildCredentials account = googleCloudBuildAccountFactory.build(accountConfig);
 
     verify(googleCredentialsService, never()).getApplicationDefault();
     verify(googleCredentialsService).getFromKey("/path/to/file");

@@ -20,8 +20,11 @@ import com.google.api.services.cloudbuild.v1.model.Build;
 import com.google.api.services.cloudbuild.v1.model.BuildTrigger;
 import com.google.api.services.cloudbuild.v1.model.RepoSource;
 import com.google.common.collect.Lists;
+import com.netflix.spinnaker.igor.accounts.CredentialsRepository;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
@@ -35,13 +38,13 @@ import retrofit.http.Query;
 @RequiredArgsConstructor
 @RequestMapping(value = "/gcb")
 public class GoogleCloudBuildController {
-  private final GoogleCloudBuildAccountRepository googleCloudBuildAccountRepository;
+  private final CredentialsRepository<GoogleCloudBuildCredentials> googleCloudBuildCredentialsRepository;
   private final GoogleCloudBuildParser googleCloudBuildParser;
 
   @RequestMapping(value = "/accounts", method = RequestMethod.GET)
   @PostFilter("hasPermission(filterObject, 'BUILD_SERVICE', 'READ')")
   public List<String> getAccounts() {
-    return Lists.newArrayList(googleCloudBuildAccountRepository.getAccounts());
+    return googleCloudBuildCredentialsRepository.getAll().stream().map(GoogleCloudBuildCredentials::getName).collect(Collectors.toList());
   }
 
   @RequestMapping(
@@ -51,7 +54,7 @@ public class GoogleCloudBuildController {
   @PreAuthorize("hasPermission(#account, 'BUILD_SERVICE', 'WRITE')")
   public Build createBuild(@PathVariable String account, @RequestBody String buildString) {
     Build build = googleCloudBuildParser.parse(buildString, Build.class);
-    return googleCloudBuildAccountRepository.getGoogleCloudBuild(account).createBuild(build);
+    return googleCloudBuildCredentialsRepository.getOne(account).createBuild(build);
   }
 
   @RequestMapping(
@@ -63,22 +66,22 @@ public class GoogleCloudBuildController {
       @PathVariable String buildId,
       @Query("status") String status,
       @RequestBody String serializedBuild) {
-    googleCloudBuildAccountRepository
-        .getGoogleCloudBuild(account)
+    googleCloudBuildCredentialsRepository
+        .getOne(account)
         .updateBuild(buildId, status, serializedBuild);
   }
 
   @RequestMapping(value = "/builds/{account}/{buildId}", method = RequestMethod.GET)
   @PreAuthorize("hasPermission(#account, 'BUILD_SERVICE', 'READ')")
   public Build getBuild(@PathVariable String account, @PathVariable String buildId) {
-    return googleCloudBuildAccountRepository.getGoogleCloudBuild(account).getBuild(buildId);
+    return googleCloudBuildCredentialsRepository.getOne(account).getBuild(buildId);
   }
 
   @RequestMapping(value = "/builds/{account}/{buildId}/artifacts", method = RequestMethod.GET)
   @PreAuthorize("hasPermission(#account, 'BUILD_SERVICE', 'READ')")
   public List<Artifact> getArtifacts(@PathVariable String account, @PathVariable String buildId) {
     return Lists.newArrayList(
-        googleCloudBuildAccountRepository.getGoogleCloudBuild(account).getArtifacts(buildId));
+      googleCloudBuildCredentialsRepository.getOne(account).getArtifacts(buildId));
   }
 
   @RequestMapping(
@@ -89,14 +92,14 @@ public class GoogleCloudBuildController {
       @PathVariable String account, @RequestBody String serializedBuild) {
     Build build = googleCloudBuildParser.parse(serializedBuild, Build.class);
     return Lists.newArrayList(
-        googleCloudBuildAccountRepository.getGoogleCloudBuild(account).extractArtifacts(build));
+      googleCloudBuildCredentialsRepository.getOne(account).extractArtifacts(build));
   }
 
   @RequestMapping(value = "/triggers/{account}", method = RequestMethod.GET)
   @PreAuthorize("hasPermission(#account, 'BUILD_SERVICE', 'READ')")
   public List<BuildTrigger> listTriggers(@PathVariable String account) {
     return Lists.newArrayList(
-        googleCloudBuildAccountRepository.getGoogleCloudBuild(account).listTriggers());
+      googleCloudBuildCredentialsRepository.getOne(account).listTriggers());
   }
 
   @RequestMapping(
@@ -109,8 +112,8 @@ public class GoogleCloudBuildController {
       @PathVariable String triggerId,
       @RequestBody String repoSourceString) {
     RepoSource repoSource = googleCloudBuildParser.parse(repoSourceString, RepoSource.class);
-    return googleCloudBuildAccountRepository
-        .getGoogleCloudBuild(account)
+    return googleCloudBuildCredentialsRepository
+        .getOne(account)
         .runTrigger(triggerId, repoSource);
   }
 }

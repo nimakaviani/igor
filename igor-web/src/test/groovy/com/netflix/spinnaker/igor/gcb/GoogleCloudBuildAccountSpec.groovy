@@ -32,7 +32,7 @@ class GoogleCloudBuildAccountSpec extends Specification {
   GoogleCloudBuildCache cache = Mock(GoogleCloudBuildCache)
   GoogleCloudBuildParser parser = new GoogleCloudBuildParser()
   GoogleCloudBuildArtifactFetcher artifactFetcher = new GoogleCloudBuildArtifactFetcher(client)
-  GoogleCloudBuildAccount googleCloudBuildAccount = new GoogleCloudBuildAccount(client, cache, parser, artifactFetcher)
+  GoogleCloudBuildCredentials googleCloudBuildAccount = new GoogleCloudBuildCredentials(client, cache, parser, artifactFetcher)
 
   def "listTriggers returns the trigger list correctly"() {
     given:

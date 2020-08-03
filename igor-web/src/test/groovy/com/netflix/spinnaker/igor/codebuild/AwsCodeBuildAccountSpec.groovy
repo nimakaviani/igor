@@ -30,7 +30,7 @@ import spock.lang.Specification
 
 class AwsCodeBuildAccountSpec extends Specification {
   AWSCodeBuildClient client = Mock(AWSCodeBuildClient)
-  AwsCodeBuildAccount awsCodeBuildAccount = new AwsCodeBuildAccount(client)
+  AwsCodeBuildCredentials awsCodeBuildAccount = new AwsCodeBuildCredentials(client)
 
   def "startBuild starts a build and returns the result"() {
     given:

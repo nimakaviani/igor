@@ -16,16 +16,18 @@
 
 package com.netflix.spinnaker.igor.config;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.auth.*;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.netflix.spinnaker.igor.codebuild.AwsCodeBuildAccount;
-import com.netflix.spinnaker.igor.codebuild.AwsCodeBuildAccountRepository;
+import com.netflix.spinnaker.igor.accounts.AccountRepositoryDescriptor;
+import com.netflix.spinnaker.igor.accounts.CredentialsRepository;
+import com.netflix.spinnaker.igor.accounts.security.CredentialsProvider;
+import com.netflix.spinnaker.igor.accounts.security.TypedAccountCredentialsProvider;
+import com.netflix.spinnaker.igor.codebuild.AwsCodeBuildCredentials;
+
 import java.util.Objects;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,29 +40,56 @@ import org.springframework.context.annotation.DependsOn;
 public class AwsCodeBuildConfig {
   @Bean("awsCodeBuildAccountRepository")
   @DependsOn({"awsSecurityTokenServiceClient"})
-  AwsCodeBuildAccountRepository awsCodeBuildAccountRepository(
+  @ConditionalOnMissingBean(
+    value = AwsCodeBuildCredentials.class,
+    parameterizedContainer = CredentialsRepository.class
+  )
+  CredentialsRepository<AwsCodeBuildCredentials> awsCodeBuildAccountRepository(
       AwsCodeBuildProperties awsCodeBuildProperties,
       AWSSecurityTokenServiceClient awsSecurityTokenServiceClient,
       AWSCredentialsProvider awsCredentialsProvider) {
-    AwsCodeBuildAccountRepository accounts = new AwsCodeBuildAccountRepository();
-    awsCodeBuildProperties
-        .getAccounts()
-        .forEach(
-            a -> {
-              AwsCodeBuildAccount account =
-                  new AwsCodeBuildAccount(awsCredentialsProvider, a.getRegion());
-              if (a.getAccountId() != null && a.getAssumeRole() != null) {
-                STSAssumeRoleSessionCredentialsProvider stsAssumeRoleSessionCredentialsProvider =
-                    new STSAssumeRoleSessionCredentialsProvider.Builder(
-                            getRoleArn(a.getAccountId(), a.getAssumeRole()), "spinnaker-session")
-                        .withStsClient(awsSecurityTokenServiceClient)
-                        .build();
-                account =
-                    new AwsCodeBuildAccount(stsAssumeRoleSessionCredentialsProvider, a.getRegion());
-              }
-              accounts.addAccount(a.getName(), account);
-            });
-    return accounts;
+    return AccountRepositoryDescriptor
+      .<AwsCodeBuildCredentials, AwsCodeBuildProperties.AwsCodeBuildAccount>builder()
+      .type(AWSCredentialsProvider.class.getName())
+      .springAccountSource(awsCodeBuildProperties::getAccounts)
+      .parser(
+        a -> {
+          AwsCodeBuildCredentials account =
+            new AwsCodeBuildCredentials(awsCredentialsProvider, a.getRegion(), a.getName());
+          if (a.getAccountId() != null && a.getAssumeRole() != null) {
+            STSAssumeRoleSessionCredentialsProvider stsAssumeRoleSessionCredentialsProvider =
+              new STSAssumeRoleSessionCredentialsProvider.Builder(
+                getRoleArn(a.getAccountId(), a.getAssumeRole()), "spinnaker-session")
+                .withStsClient(awsSecurityTokenServiceClient)
+                .build();
+            account =
+              new AwsCodeBuildCredentials(stsAssumeRoleSessionCredentialsProvider, a.getRegion(), a.getName());
+          }
+          return account;
+        }
+      )
+      .build()
+      .createRepository();
+
+//    AwsCodeBuildAccountRepository accounts = new AwsCodeBuildAccountRepository();
+//    awsCodeBuildProperties
+//        .getAccounts()
+//        .forEach(
+//            a -> {
+//              AwsCodeBuildAccount account =
+//                  new AwsCodeBuildAccount(awsCredentialsProvider, a.getRegion());
+//              if (a.getAccountId() != null && a.getAssumeRole() != null) {
+//                STSAssumeRoleSessionCredentialsProvider stsAssumeRoleSessionCredentialsProvider =
+//                    new STSAssumeRoleSessionCredentialsProvider.Builder(
+//                            getRoleArn(a.getAccountId(), a.getAssumeRole()), "spinnaker-session")
+//                        .withStsClient(awsSecurityTokenServiceClient)
+//                        .build();
+//                account =
+//                    new AwsCodeBuildAccount(stsAssumeRoleSessionCredentialsProvider, a.getRegion());
+//              }
+//              accounts.addAccount(a.getName(), account);
+//            });
+//    return accounts;
   }
 
   @Bean("awsSecurityTokenServiceClient")
@@ -74,6 +103,7 @@ public class AwsCodeBuildConfig {
   }
 
   @Bean("awsCredentialsProvider")
+//  CredentialsProvider<AwsCodeBuildCredentials> awsCredentialsProvider(CredentialsRepository<AwsCodeBuildCredentials> repository) {
   AWSCredentialsProvider awsCredentialsProvider(AwsCodeBuildProperties awsCodeBuildProperties) {
     AWSCredentialsProvider credentialsProvider = DefaultAWSCredentialsProviderChain.getInstance();
     if (awsCodeBuildProperties.getAccessKeyId() != null

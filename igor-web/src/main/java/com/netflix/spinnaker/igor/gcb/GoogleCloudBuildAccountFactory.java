@@ -33,19 +33,20 @@ final class GoogleCloudBuildAccountFactory {
   private final GoogleCloudBuildCache.Factory googleCloudBuildCacheFactory;
   private final GoogleCloudBuildParser googleCloudBuildParser;
 
-  GoogleCloudBuildAccount build(GoogleCloudBuildProperties.Account account) {
+  GoogleCloudBuildCredentials build(GoogleCloudBuildProperties.GoogleCloudBuildAccount account) {
     GoogleCredentials credentials = getCredentials(account);
 
     GoogleCloudBuildClient client =
         googleCloudBuildClientFactory.create(credentials, account.getProject());
-    return new GoogleCloudBuildAccount(
+    return new GoogleCloudBuildCredentials(
+        account.getName(),
         client,
         googleCloudBuildCacheFactory.create(account.getName()),
         googleCloudBuildParser,
         new GoogleCloudBuildArtifactFetcher(client));
   }
 
-  private GoogleCredentials getCredentials(GoogleCloudBuildProperties.Account account) {
+  private GoogleCredentials getCredentials(GoogleCloudBuildProperties.GoogleCloudBuildAccount account) {
     if (account.getJsonKey().isPresent()) {
       return credentialService.getFromKey(account.getJsonKey().get());
     } else {

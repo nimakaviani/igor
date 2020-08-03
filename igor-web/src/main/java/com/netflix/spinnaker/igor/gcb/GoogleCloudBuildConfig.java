@@ -19,6 +19,8 @@ package com.netflix.spinnaker.igor.gcb;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.netflix.spinnaker.igor.IgorConfigurationProperties;
+import com.netflix.spinnaker.igor.accounts.AccountRepositoryDescriptor;
+import com.netflix.spinnaker.igor.accounts.CredentialsRepository;
 import com.netflix.spinnaker.igor.config.GoogleCloudBuildProperties;
 import com.netflix.spinnaker.igor.polling.LockService;
 import com.netflix.spinnaker.kork.jedis.RedisClientDelegate;
@@ -45,19 +47,34 @@ class GoogleCloudBuildConfig {
   }
 
   @Bean
-  GoogleCloudBuildAccountRepository googleCloudBuildAccountRepository(
+  CredentialsRepository<GoogleCloudBuildCredentials> googleCloudBuildCredentialsRepository(
       GoogleCloudBuildAccountFactory googleCloudBuildAccountFactory,
       GoogleCloudBuildProperties googleCloudBuildProperties) {
-    GoogleCloudBuildAccountRepository.Builder builder = GoogleCloudBuildAccountRepository.builder();
-    googleCloudBuildProperties
-        .getAccounts()
-        .forEach(
-            a -> {
-              GoogleCloudBuildAccount account = googleCloudBuildAccountFactory.build(a);
-              builder.registerAccount(a.getName(), account);
-            });
-    return builder.build();
+    return AccountRepositoryDescriptor.
+      <GoogleCloudBuildCredentials, GoogleCloudBuildProperties.GoogleCloudBuildAccount>builder()
+      .type(GoogleCloudBuildCredentials.class.getName())
+      .springAccountSource(googleCloudBuildProperties::getAccounts)
+      .parser(
+        a -> {
+          return googleCloudBuildAccountFactory.build(a);
+        })
+      .build()
+      .createRepository();
   }
+
+//  GoogleCloudBuildAccountRepository googleCloudBuildAccountRepository(
+//      GoogleCloudBuildAccountFactory googleCloudBuildAccountFactory,
+//      GoogleCloudBuildProperties googleCloudBuildProperties) {
+//    GoogleCloudBuildAccountRepository.Builder builder = GoogleCloudBuildAccountRepository.builder();
+//    googleCloudBuildProperties
+//        .getAccounts()
+//        .forEach(
+//            a -> {
+//              GoogleCloudBuildCredentials account = googleCloudBuildAccountFactory.build(a);
+//              builder.registerAccount(a.getName(), account);
+//            });
+//    return builder.build();
+//  }
 
   @Bean
   GoogleCloudBuildCache.Factory googleCloudBuildCacheFactory(

@@ -27,6 +27,7 @@ import com.amazonaws.services.codebuild.model.ListProjectsResult;
 import com.amazonaws.services.codebuild.model.ProjectSortByType;
 import com.amazonaws.services.codebuild.model.StartBuildRequest;
 import com.amazonaws.services.codebuild.model.StopBuildRequest;
+import com.netflix.spinnaker.igor.accounts.security.AccountCredentials;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +35,38 @@ import lombok.RequiredArgsConstructor;
 
 /** Generates authenticated requests to AWS CodeBuild API for a single configured account */
 @RequiredArgsConstructor
-public class AwsCodeBuildAccount {
+public class AwsCodeBuildCredentials<T> implements AccountCredentials<T> {
   private final AWSCodeBuildClient client;
+  private final String name;
 
-  public AwsCodeBuildAccount(AWSCredentialsProvider credentialsProvider, String region) {
+  @Override
+  public String getName() {
+    return this.name;
+  }
+
+  @Override
+  public String getEnvironment() {
+    return "";
+  }
+
+  @Override
+  public String getAccountType() {
+    return "";
+  }
+
+  @Override
+  public T getCredentials() {
+    return null;
+  }
+
+  @Override
+  public String getCloudProvider() {
+    return "aws";
+  }
+
+  public AwsCodeBuildCredentials(AWSCredentialsProvider credentialsProvider, String region, String name) {
     // TODO: Add client-side rate limiting to avoid getting throttled if necessary
+    this.name = name;
     this.client =
         (AWSCodeBuildClient)
             AWSCodeBuildClientBuilder.standard()

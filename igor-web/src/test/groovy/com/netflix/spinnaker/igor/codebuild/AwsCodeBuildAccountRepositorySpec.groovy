@@ -21,9 +21,8 @@ import com.netflix.spinnaker.kork.web.exceptions.NotFoundException
 import spock.lang.Specification
 
 class AwsCodeBuildAccountRepositorySpec extends Specification{
-  AwsCodeBuildAccountRepository repository = new AwsCodeBuildAccountRepository()
-  AwsCodeBuildAccount account1 = Mock(AwsCodeBuildAccount)
-  AwsCodeBuildAccount account2 = Mock(AwsCodeBuildAccount)
+  AwsCodeBuildCredentials account1 = Mock(AwsCodeBuildCredentials)
+  AwsCodeBuildCredentials account2 = Mock(AwsCodeBuildCredentials)
 
   def "getAccount should return account if it exists in the repository"() {
     given:

@@ -68,7 +68,7 @@ class InfoControllerSpec extends Specification {
         server = new MockWebServer()
     }
 
-    void createMocks(Map<String, BuildOperations> buildServices, List<GoogleCloudBuildProperties.Account> gcbAccounts = null) {
+    void createMocks(Map<String, BuildOperations> buildServices, List<GoogleCloudBuildProperties.GoogleCloudBuildAccount> gcbAccounts = null) {
         cache = Mock(BuildCache)
         this.buildServices = new BuildServices()
         this.buildServices.addServices(buildServices)
@@ -83,8 +83,8 @@ class InfoControllerSpec extends Specification {
             .build()
     }
 
-    GoogleCloudBuildProperties.Account createGCBAccount(String name) {
-      return GoogleCloudBuildProperties.Account.builder()
+  GoogleCloudBuildProperties.GoogleCloudBuildAccount createGCBAccount(String name) {
+      return GoogleCloudBuildProperties.GoogleCloudBuildAccount.builder()
         .name(name)
         .project('blah')
         .build()
@@ -160,7 +160,7 @@ class InfoControllerSpec extends Specification {
                 .add(Authorization.READ, ['group-3', 'group-4'])
                 .add(Authorization.WRITE, 'group-3').build(), false, CircuitBreakerRegistry.ofDefaults())
 
-        GoogleCloudBuildProperties.Account gcbAccount = GoogleCloudBuildProperties.Account.builder()
+        GoogleCloudBuildProperties.GoogleCloudBuildAccount gcbAccount = GoogleCloudBuildProperties.GoogleCloudBuildAccount.builder()
           .name("gcbAccount")
           .project('blah')
           .permissions(

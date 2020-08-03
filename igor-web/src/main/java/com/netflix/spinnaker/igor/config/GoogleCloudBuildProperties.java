@@ -19,6 +19,7 @@ package com.netflix.spinnaker.igor.config;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.netflix.spinnaker.fiat.model.resources.Permissions;
+import com.netflix.spinnaker.igor.accounts.Account;
 import com.netflix.spinnaker.igor.model.BuildServiceProvider;
 import com.netflix.spinnaker.igor.service.BuildService;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
@@ -35,7 +36,7 @@ import org.springframework.boot.context.properties.ConstructorBinding;
 @ConfigurationProperties(prefix = "gcb")
 @Data
 public class GoogleCloudBuildProperties {
-  private List<Account> accounts;
+  private List<GoogleCloudBuildAccount> accounts;
 
   public List<BuildService> getGcbBuildServices() {
     return this.accounts.stream().map(BuildService::getView).collect(Collectors.toList());
@@ -43,7 +44,7 @@ public class GoogleCloudBuildProperties {
 
   @NonnullByDefault
   @Value
-  public static final class Account implements BuildService {
+  public static final class GoogleCloudBuildAccount implements BuildService, Account {
     private static final String ERROR_TEMPLATE = "Missing required field for GCB account %s: %s";
 
     private final String name;
@@ -54,7 +55,7 @@ public class GoogleCloudBuildProperties {
     @Builder
     @ConstructorBinding
     @ParametersAreNullableByDefault
-    public Account(String name, String project, String jsonKey, Permissions.Builder permissions) {
+    public GoogleCloudBuildAccount(String name, String project, String jsonKey, Permissions.Builder permissions) {
       this.name = Preconditions.checkNotNull(Strings.emptyToNull(name), ERROR_TEMPLATE, "", "name");
       this.project =
           Preconditions.checkNotNull(

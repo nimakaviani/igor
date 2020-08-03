@@ -22,6 +22,7 @@ import com.google.api.services.cloudbuild.v1.model.ListBuildTriggersResponse;
 import com.google.api.services.cloudbuild.v1.model.Operation;
 import com.google.api.services.cloudbuild.v1.model.RepoSource;
 import com.google.common.collect.ImmutableList;
+import com.netflix.spinnaker.igor.accounts.Credentials;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +36,19 @@ import lombok.RequiredArgsConstructor;
  * either the GoogleCloudBuildCache or GoogleCloudBuildClient.
  */
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class GoogleCloudBuildAccount {
+class GoogleCloudBuildCredentials implements Credentials {
   private static final String BUILD_TAG = "started-by.spinnaker.io";
 
+  private final String name;
   private final GoogleCloudBuildClient client;
   private final GoogleCloudBuildCache cache;
   private final GoogleCloudBuildParser googleCloudBuildParser;
   private final GoogleCloudBuildArtifactFetcher googleCloudBuildArtifactFetcher;
+
+  @Override
+  public String getName(){
+    return this.name;
+  }
 
   Build createBuild(Build buildRequest) {
     appendTags(buildRequest);
